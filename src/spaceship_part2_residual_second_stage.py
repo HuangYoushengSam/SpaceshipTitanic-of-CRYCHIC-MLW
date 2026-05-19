@@ -15,7 +15,7 @@ Output:
 
 This stage reads only the baseline and model probability tables from Part 1,
 plus the raw test features. It does not read external labels or
-PassengerId-specific answer lists.
+PassengerId-specific label rules.
 """
 
 from pathlib import Path

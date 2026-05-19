@@ -12,8 +12,8 @@ then applies the residual correction rulebook developed
 from model disagreement, passenger structure, cabin/deck/side structure,
 CryoSleep-spend consistency, and route/family consistency.
 
-It intentionally does not read external-label files or PassengerId-specific
-answer lists. The residual layer is parameterized as
+It intentionally does not read external label files or PassengerId-specific
+label rules. The residual layer is parameterized as
 interpretable feature/model-disagreement regions rather than per-row labels.
 """
 

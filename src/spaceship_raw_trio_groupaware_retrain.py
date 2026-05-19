@@ -575,24 +575,24 @@ def make_groupaware_anchor(
     return anchor, summary
 
 
-def compare_known_submissions(anchor: pd.DataFrame, out_dir: Path) -> None:
+def compare_packaged_artifacts(anchor: pd.DataFrame, out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
     for label, path in KNOWN_COMPARISONS.items():
         if not path.exists():
-            rows.append({"target": label, "path": str(path), "status": "missing"})
+            rows.append({"artifact": label, "path": str(path), "status": "missing"})
             continue
-        target = pd.read_csv(path)
+        artifact = pd.read_csv(path)
         merged = anchor[[ID_COL, TARGET_COL]].rename(columns={TARGET_COL: "new_pred"}).merge(
-            target[[ID_COL, TARGET_COL]].rename(columns={TARGET_COL: "target_pred"}),
+            artifact[[ID_COL, TARGET_COL]].rename(columns={TARGET_COL: "artifact_pred"}),
             on=ID_COL,
             how="inner",
         )
         new_bool = merged["new_pred"].astype(bool)
-        target_bool = merged["target_pred"].astype(bool)
-        diff = merged[new_bool != target_bool].copy()
-        diff["direction_new_to_target"] = np.where(
-            diff["new_pred"].astype(bool) & ~diff["target_pred"].astype(bool),
+        artifact_bool = merged["artifact_pred"].astype(bool)
+        diff = merged[new_bool != artifact_bool].copy()
+        diff["direction_new_to_artifact"] = np.where(
+            diff["new_pred"].astype(bool) & ~diff["artifact_pred"].astype(bool),
             "T->F",
             "F->T",
         )
@@ -600,20 +600,20 @@ def compare_known_submissions(anchor: pd.DataFrame, out_dir: Path) -> None:
         diff.to_csv(detail_path, index=False)
         rows.append(
             {
-                "target": label,
+                "artifact": label,
                 "path": str(path),
                 "status": "ok",
                 "matched_rows": int(len(merged)),
                 "n_diff": int(len(diff)),
-                "same_rate": float((new_bool == target_bool).mean()),
+                "same_rate": float((new_bool == artifact_bool).mean()),
                 "new_true_rate": float(new_bool.mean()),
-                "target_true_rate": float(target_bool.mean()),
-                "new_true_target_false": int((new_bool & ~target_bool).sum()),
-                "new_false_target_true": int((~new_bool & target_bool).sum()),
+                "artifact_true_rate": float(artifact_bool.mean()),
+                "new_true_artifact_false": int((new_bool & ~artifact_bool).sum()),
+                "new_false_artifact_true": int((~new_bool & artifact_bool).sum()),
                 "detail_file": str(detail_path),
             }
         )
-    pd.DataFrame(rows).to_csv(out_dir / "comparison_vs_known_submissions.csv", index=False)
+    pd.DataFrame(rows).to_csv(out_dir / "comparison_vs_packaged_artifacts.csv", index=False)
 
 
 def write_leakage_audit(strict_candidates: bool, strict_base: bool, apply_residual: bool) -> None:
@@ -640,7 +640,7 @@ def write_leakage_audit(strict_candidates: bool, strict_base: bool, apply_residu
                 "mode": "enabled" if apply_residual else "disabled",
                 "fold_policy": "No training-fold refit inside this stage; it applies deterministic residual selectors.",
                 "preprocessing_policy": "Uses test features, anchor prediction, and model probabilities; no target labels are read.",
-                "risk": "Possible selection-bias risk if deterministic rules are repeatedly adjusted after observing external evaluation. Keep this separate from OOF claims.",
+                "risk": "Possible selection-bias risk if deterministic rules are tuned after post-hoc validation. Keep this separate from OOF claims.",
                 "use_in_report": "Describe as residual calibration on interpretable structure/model-disagreement leaves.",
             },
         ]
@@ -835,7 +835,7 @@ def apply_residual_stability_gate(
             "reference_residual_pred": reference_s.to_numpy(bool),
             "final_pred": gated_s.to_numpy(bool),
             "probability_pass_disagreed": disagreed.to_numpy(bool),
-            "used_reference_calibration": disagreed.to_numpy(bool),
+            "used_stability_calibration": disagreed.to_numpy(bool),
         }
     )
     gate_audit = gate_audit.merge(changed_audit_by_passenger(current_audit, "current"), on=ID_COL, how="left")
@@ -845,7 +845,7 @@ def apply_residual_stability_gate(
     summary = pd.DataFrame(
         [
             {
-                "gate": "reference_calibrated_boundary_gate",
+                "gate": "stability_boundary_gate",
                 "n_probability_disagreements": int(disagreed.sum()),
                 "n_changed_vs_anchor": int(changed.sum()),
                 "F_to_T": int((~anchor_s[changed] & gated_s[changed]).sum()),
@@ -1106,7 +1106,7 @@ def apply_residual_stage_to_anchor(
                 "method": residual_method,
                 "anchor_file": str(RAW_RETRAIN_ANCHOR),
                 "candidate_test": str(candidate_source),
-                "reference_candidate_test": str(reference_source) if reference_source is not None else "",
+                "stability_candidate_test": str(reference_source) if reference_source is not None else "",
                 "stability_gate": stability_gate and reference_candidate is not None,
                 "oof_supported_rescue": rescue_level,
                 "base_test": str(base_path),
@@ -1120,7 +1120,7 @@ def apply_residual_stage_to_anchor(
         ]
     )
     residual_summary.to_csv(OUT_DIR / "raw_retrain_plus_residual_summary.csv", index=False)
-    compare_known_submissions(final, OUT_DIR / "residual_comparison")
+    compare_packaged_artifacts(final, OUT_DIR / "residual_comparison")
     log(f"residual stage done: {out_file}")
 
 
@@ -1188,7 +1188,7 @@ def run(
             raise ValueError(f"--reuse-existing does not contain strict candidate columns: {missing}")
     if reuse_existing and strict_base:
         train_strict_base_predictions(train_raw, test_raw)
-    compare_known_submissions(anchor, OUT_DIR)
+    compare_packaged_artifacts(anchor, OUT_DIR)
     write_leakage_audit(strict_candidates, strict_base, apply_residual)
     if apply_residual:
         apply_residual_stage_to_anchor(anchor, test_raw, cand_test, residual_stability_gate, residual_rescue_level)
