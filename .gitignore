@@ -1,0 +1,24 @@
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.idea/
+catboost_info/
+outputs/
+
+# Local data. Keep Kaggle data out of a public repo unless explicitly allowed/requested.
+data/*.csv
+!data/README.md
+
+# Heavy or local-only experiment caches.
+*.pkl
+*.joblib
+*.journal
+*_outputs/
+
+# Keep curated reproducibility artifacts.
+!artifacts/
+!artifacts/**/*.csv
+!artifacts/**/*.log
+!artifacts/**/*.md
+

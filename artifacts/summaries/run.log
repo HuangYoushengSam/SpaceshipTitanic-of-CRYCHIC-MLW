@@ -1,0 +1,37 @@
+[19:48:37] reading data/train.csv
+[19:48:37] building original v7 feature table from raw train/test
+[19:48:45] training anchor trio candidates with threads=31 xgb_device=cuda
+[19:48:50] xgb@F1+F2 fold 1/5 seed=42
+[19:50:31] xgb@F1+F2 fold 1/5 seed=2024
+[19:52:14] xgb@F1+F2 fold 2/5 seed=42
+[19:54:03] xgb@F1+F2 fold 2/5 seed=2024
+[19:55:50] xgb@F1+F2 fold 3/5 seed=42
+[19:57:40] xgb@F1+F2 fold 3/5 seed=2024
+[19:59:28] xgb@F1+F2 fold 4/5 seed=42
+[20:01:16] xgb@F1+F2 fold 4/5 seed=2024
+[20:03:03] xgb@F1+F2 fold 5/5 seed=42
+[20:04:53] xgb@F1+F2 fold 5/5 seed=2024
+[20:06:42] xgb@F1+F2 cv@0.5=0.815714
+[20:06:44] lgb@F1+F2 fold 1/5 seed=42
+[20:06:45] lgb@F1+F2 fold 1/5 seed=2024
+[20:06:46] lgb@F1+F2 fold 2/5 seed=42
+[20:06:47] lgb@F1+F2 fold 2/5 seed=2024
+[20:06:48] lgb@F1+F2 fold 3/5 seed=42
+[20:06:50] lgb@F1+F2 fold 3/5 seed=2024
+[20:06:51] lgb@F1+F2 fold 4/5 seed=42
+[20:06:53] lgb@F1+F2 fold 4/5 seed=2024
+[20:06:56] lgb@F1+F2 fold 5/5 seed=42
+[20:06:59] lgb@F1+F2 fold 5/5 seed=2024
+[20:07:01] lgb@F1+F2 cv@0.5=0.815944
+[20:07:08] xgb@F1+F2+F3 fold 1/5 seed=42
+[20:09:05] xgb@F1+F2+F3 fold 1/5 seed=2024
+[20:10:44] xgb@F1+F2+F3 fold 2/5 seed=42
+[20:12:18] xgb@F1+F2+F3 fold 2/5 seed=2024
+[20:13:50] xgb@F1+F2+F3 fold 3/5 seed=42
+[20:15:23] xgb@F1+F2+F3 fold 3/5 seed=2024
+[20:16:54] xgb@F1+F2+F3 fold 4/5 seed=42
+[20:18:26] xgb@F1+F2+F3 fold 4/5 seed=2024
+[20:19:58] xgb@F1+F2+F3 fold 5/5 seed=42
+[20:21:31] xgb@F1+F2+F3 fold 5/5 seed=2024
+[20:23:02] xgb@F1+F2+F3 cv@0.5=0.815714
+[20:23:02] done

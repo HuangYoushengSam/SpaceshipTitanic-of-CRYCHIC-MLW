@@ -1,0 +1,2 @@
+method,probability_columns,weights,group_alpha,threshold,oof_accuracy,test_true_rate
+raw_retrain_trio_groupaware,xgb@F1+F2|lgb@F1+F2|xgb@F1+F2+F3,0.50|0.30|0.20,0.15,0.47,0.8188197400207063,0.5480476969838672
