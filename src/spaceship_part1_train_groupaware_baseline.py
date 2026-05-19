@@ -18,7 +18,7 @@ Important:
     F1/F2/F3 model-training stage. This file reproduces the original baseline
     blend exactly; it does not invent a new feature-family approximation.
 
-Outputs are written into zero_to_82698_pipeline_outputs so Part 2 can consume
+Outputs are written into the combined pipeline output directory so Part 2 can consume
 the same baseline and probability tables.
 """
 
@@ -39,7 +39,7 @@ from spaceship_residual_ml_explainable_stage2 import (
     TEST_CSV,
     TRAIN_CSV,
 )
-from spaceship_zero_to_82698_pipeline import OUT_DIR, PROB_DIR, ensure_dirs
+from spaceship_residual_pipeline import OUT_DIR, PROB_DIR, ensure_dirs
 
 
 ROOT = Path(__file__).resolve().parents[1]

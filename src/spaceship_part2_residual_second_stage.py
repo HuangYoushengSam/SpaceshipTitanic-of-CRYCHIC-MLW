@@ -4,25 +4,25 @@ from __future__ import annotations
 Part 2: apply the interpretable residual correction layer to the Part 1 baseline.
 
 Input produced by Part 1:
-    - zero_to_82698_pipeline_outputs/baseline_groupaware_anchor_from_train.csv
-    - zero_to_82698_pipeline_outputs/trained_probabilities/candidate_test_predictions_from_train.csv
-    - zero_to_82698_pipeline_outputs/trained_probabilities/base_test_predictions_from_train.csv
+    - outputs/zero_to_submission_pipeline/baseline_groupaware_anchor_from_train.csv
+    - outputs/zero_to_submission_pipeline/trained_probabilities/candidate_test_predictions_from_train.csv
+    - outputs/zero_to_submission_pipeline/trained_probabilities/base_test_predictions_from_train.csv
 
 Output:
-    - zero_to_82698_pipeline_outputs/submissions/part2_residual_corrected_submission.csv
-    - zero_to_82698_pipeline_outputs/part2_residual_audit.csv
-    - zero_to_82698_pipeline_outputs/part2_residual_module_summary.csv
+    - outputs/zero_to_submission_pipeline/submissions/part2_residual_corrected_submission.csv
+    - outputs/zero_to_submission_pipeline/part2_residual_audit.csv
+    - outputs/zero_to_submission_pipeline/part2_residual_module_summary.csv
 
 This stage reads only the baseline and model probability tables from Part 1,
-plus the raw test features. It does not read high-score submissions, public
-label files, or PassengerId-specific answer lists.
+plus the raw test features. It does not read external labels or
+PassengerId-specific answer lists.
 """
 
 from pathlib import Path
 
 import pandas as pd
 
-from spaceship_zero_to_82698_pipeline import (
+from spaceship_residual_pipeline import (
     ID_COL,
     OUT_DIR,
     PROB_DIR,

@@ -29,13 +29,13 @@ Upload:
 - Source code under `src/`.
 - `README.md`.
 - `requirements.txt`.
-- Key reproducibility artifacts under `artifacts/probability_tables/`.
-- Final/reference submissions under `artifacts/submissions/`.
+- Compact reproducibility artifacts under `artifacts/probability_tables/`.
+- Generated submission examples under `artifacts/submissions/`.
 - Small audit/summary files under `artifacts/summaries/`.
 
 Do not upload by default:
 
-- Dozens of failed candidate submissions.
+- Large exploratory submission batches.
 - Large exploratory output folders.
 - Pickle caches.
 - Optuna journal files.
@@ -53,4 +53,3 @@ For iSpace final submission, include:
 - Presentation PPT/PDF.
 - Kaggle submission log screenshots.
 - Optional: final submission CSV and compact audit summaries.
-

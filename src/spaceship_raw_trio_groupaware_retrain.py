@@ -625,14 +625,14 @@ def write_leakage_audit(strict_candidates: bool, strict_base: bool, apply_residu
                 "fold_policy": "CV folds are StratifiedGroupKFold by PassengerId group.",
                 "preprocessing_policy": "Original v7 feature builder concatenates train+test before CV and uses global structure/frequencies.",
                 "risk": "OOF can be optimistic because validation fold covariates participate in unsupervised/statistical preprocessing; no target label from validation/test is used.",
-                "use_in_report": "Use as public-facing transductive reconstruction, not as the cleanest estimate of generalization.",
+                "use_in_report": "Use as demo-facing transductive reconstruction; report fold-safe estimates separately when discussing generalization.",
             },
             {
                 "stage": "top100_base_probabilities",
                 "mode": "strict_base" if strict_base else "not_retrained_in_this_run",
                 "fold_policy": "Original finalizer uses 5 StratifiedGroupKFold folds and MODEL_SEEDS=[42,2024,3407].",
                 "preprocessing_policy": "Fold-safe: feature builder is fit on each training fold, then applied to validation/test.",
-                "risk": "Low leakage risk for OOF; still transductive only through using the same public test feature table for prediction.",
+                "risk": "Low leakage risk for OOF; the test feature table is used only for prediction-time feature construction.",
                 "use_in_report": "Use as cleaner heterogeneous model evidence for the residual layer.",
             },
             {
@@ -640,7 +640,7 @@ def write_leakage_audit(strict_candidates: bool, strict_base: bool, apply_residu
                 "mode": "enabled" if apply_residual else "disabled",
                 "fold_policy": "No training-fold refit inside this stage; it applies deterministic residual selectors.",
                 "preprocessing_policy": "Uses test features, anchor prediction, and model probabilities; no target labels are read.",
-                "risk": "High selection-bias risk if rules were tuned from public feedback. Keep this separate from OOF claims.",
+                "risk": "Possible selection-bias risk if deterministic rules are repeatedly adjusted after observing external evaluation. Keep this separate from OOF claims.",
                 "use_in_report": "Describe as residual calibration on interpretable structure/model-disagreement leaves.",
             },
         ]
@@ -935,7 +935,7 @@ def apply_oof_supported_rescue(
     base: pd.DataFrame,
     anchor: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    from spaceship_zero_to_82698_pipeline import build_residual_features
+    from spaceship_residual_pipeline import build_residual_features
 
     feat = add_oof_rescue_bins(build_residual_features(test_raw, candidate, base, anchor))
     current_s = bool_indexed(final)
@@ -1009,9 +1009,9 @@ def apply_residual_stage_to_anchor(
     The current retrain probabilities are used for the main pass. When enabled,
     the stability gate also runs a calibrated reference probability pass and
     uses it only where the two residual passes disagree on narrow boundary rows.
-    No high-score submission is used by this stage.
+    No external label file is used by this stage.
     """
-    from spaceship_zero_to_82698_pipeline import run_residual_stage
+    from spaceship_residual_pipeline import run_residual_stage
 
     candidate, candidate_source, reference_candidate, reference_source = load_residual_candidates(raw_cand_test)
 

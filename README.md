@@ -1,19 +1,22 @@
 # Spaceship Titanic ML Workshop Project
 
-This repository contains the runnable source code for our AI3023 Machine Learning Workshop course project on the Kaggle Spaceship Titanic competition.
+This repository contains the runnable source code for our AI3023 Machine Learning Workshop course project on the Kaggle Spaceship Titanic task.
+
+The demo uses the original dataset provided by the instructor/Kaggle. The code expects the standard `train.csv` and `test.csv` schema, where `train.csv` contains the target column `Transported` and `test.csv` contains passengers whose `Transported` labels must be predicted.
 
 ## Method Overview
 
-The final pipeline was built around a group-aware ensemble rather than a broad "feature stew" approach. Early experiments with large mixed feature sets and paper-inspired model stacks produced unstable validation-public behavior, so we moved to a more controlled route:
+Our final modeling route is a group-aware tabular learning pipeline. Instead of placing all engineered variables into one large feature pool, we separated the features by role and used multiple tree-based models to capture complementary signals.
 
-1. Fold-safe feature construction from the original train/test schema.
-2. Group-aware feature families using `PassengerId`, cabin deck/side/number, surname, route, CryoSleep, and spend consistency.
-3. A raw anchor ensemble:
-   - `xgb@F1+F2`
-   - `lgb@F1+F2`
-   - `xgb@F1+F2+F3`
-4. Stability-gated residual correction using heterogeneous model probability tables.
-5. OOF-supported residual rescue rules based on interpretable feature/model-disagreement regions.
+Main ideas:
+
+1. Fold-safe preprocessing and feature construction.
+2. Passenger-group features from `PassengerId`.
+3. Cabin structure features from deck, side and cabin number.
+4. Family/name features from surname patterns.
+5. Behavioral consistency features from `CryoSleep`, spending columns, age and route.
+6. A small ensemble of XGBoost and LightGBM models on controlled feature families.
+7. A second-stage boundary calibration step based on model disagreement and interpretable passenger-structure rules.
 
 The key entrypoint is:
 
@@ -21,43 +24,51 @@ The key entrypoint is:
 python src/spaceship_raw_trio_groupaware_retrain.py --threads 8 --xgb-device cpu --apply-residual-stage --strict-candidates
 ```
 
-Use `--xgb-device cuda` if your local XGBoost installation supports GPU training.
+Use `--xgb-device cuda` only if your local XGBoost installation supports GPU training.
 
 ## Repository Structure
 
 ```text
 .
-├── src/
-│   ├── spaceship_raw_trio_groupaware_retrain.py     # main reproducible entrypoint
-│   ├── spaceship_zero_to_82698_pipeline.py          # residual-stage helper functions
-│   ├── spaceship_foldsafe_v2_local_probe.py         # fold-safe feature builder
-│   └── spaceship_81201_* / spaceship_residual_*     # second-stage rule modules
-├── data/
-│   └── README.md                                    # put train/test files here
-├── artifacts/
-│   ├── probability_tables/                          # cached probability tables for exact reproduction
-│   ├── submissions/                                 # reference submissions produced by the pipeline
-│   └── summaries/                                   # run summaries, audit tables, and model metrics
-├── scripts/
-│   ├── run_cpu.cmd
-│   └── run_gpu.cmd
-├── docs/
-│   └── GITHUB_UPLOAD_CHECKLIST.md
-├── requirements.txt
-└── README.md
+|-- src/
+|   |-- spaceship_raw_trio_groupaware_retrain.py     # main training and inference entrypoint
+|   |-- spaceship_residual_pipeline.py               # second-stage calibration helpers
+|   |-- spaceship_foldsafe_v2_local_probe.py         # fold-safe feature builder
+|   |-- spaceship_part1_train_groupaware_baseline.py # baseline ensemble helper
+|   |-- spaceship_part2_residual_second_stage.py     # residual calibration helper
+|   `-- additional feature-rule modules
+|-- data/
+|   `-- README.md                                    # place train/test files here
+|-- artifacts/
+|   |-- probability_tables/                          # compact model-output artifacts from completed runs
+|   |-- submissions/                                 # generated submission examples
+|   `-- summaries/                                   # audit tables and model metrics
+|-- scripts/
+|   |-- run_cpu.cmd
+|   `-- run_gpu.cmd
+|-- docs/
+|   `-- GITHUB_UPLOAD_CHECKLIST.md
+|-- requirements.txt
+`-- README.md
 ```
 
 ## Data Setup
 
-Download the Kaggle Spaceship Titanic data and place the files here:
+Place the original Spaceship Titanic data files in `data/`:
 
 ```text
 data/train.csv
 data/test.csv
-data/sample_submission.csv   # optional
+data/sample_submission.csv   # optional, used only as a format reference
 ```
 
-The code also supports environment variables:
+The standard task is:
+
+- Train on `train.csv`, where `Transported` is known.
+- Predict one `Transported` label for each `PassengerId` in `test.csv`.
+- Save a two-column submission file with `PassengerId` and `Transported`.
+
+Environment variables can be used if the data is stored elsewhere:
 
 ```bash
 set SPACESHIP_DATA_DIR=C:\path\to\data
@@ -84,37 +95,26 @@ Manual command:
 python src/spaceship_raw_trio_groupaware_retrain.py --threads 8 --xgb-device cpu --apply-residual-stage --strict-candidates
 ```
 
-The final CSV is written to:
+The generated CSV is written to:
 
 ```text
 outputs/raw_trio_groupaware_retrain/submissions/groupaware_raw_retrain_plus_residual_second_stage.csv
 ```
 
-## Notes on Cached Artifacts
+## Artifacts
 
-The course PDF requires readable runnable source code and a README. It does not require every exploratory CSV or every failed candidate submission.
+The `artifacts/` folder contains compact outputs from completed local runs:
 
-The `artifacts/probability_tables/` files are included because the residual stage uses heterogeneous model signals. They are treated as reproducibility artifacts, not as additional submitted solutions. The main training script can regenerate the group-aware candidate table; the cached base probability table is kept to reproduce the submitted residual layer on the original Kaggle split.
+- model probability tables used by the second-stage calibration code;
+- example generated submission files;
+- summary and audit CSV files for checking the training process.
 
-For a new teacher-provided dataset, remove or replace cached probability tables and retrain the probability layer from the new train/test split.
+These files are included only to make the project easier to inspect and reproduce. The core project deliverable is the source code plus the instructions above. Large exploratory folders, local notebook caches and raw downloaded data are intentionally excluded.
 
-## Main Output References
+## Reproducibility Notes
 
-Reference final submission:
-
-```text
-artifacts/submissions/groupaware_raw_retrain_plus_residual_second_stage.csv
-```
-
-Main run summary:
-
-```text
-artifacts/summaries/raw_retrain_plus_residual_summary.csv
-```
-
-Leakage/CV audit:
-
-```text
-artifacts/summaries/leakage_and_cv_audit.csv
-```
+- The main script reads only the provided train/test files and the project artifacts documented above.
+- Cross-validation uses group-aware splitting through the passenger group extracted from `PassengerId`.
+- The second-stage calibration is expressed as feature/model-disagreement rules rather than manual editing of individual output rows.
+- For a clean demo, copy the provided original `train.csv` and `test.csv` into `data/`, install the dependencies, and run the CPU or GPU command.
 
